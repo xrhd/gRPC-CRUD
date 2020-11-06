@@ -5,6 +5,28 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 
 
+class UserClient():
+
+    def __init__(self, port):
+        channel = grpc.insecure_channel(f"localhost:{port}")
+        self.stub = User_pb2_grpc.UserServiceStub(channel)
+
+    def create_user(self, user):
+        return self.stub.CreateUser(user)
+
+    def read_user(self, user):
+        return self.stub.ReadUser(user)
+
+    def update_user(self, user):
+        return self.stub.UpdateUser(user)
+
+    def delete_user(self, user):
+        return self.stub.DeleteUser(user)
+
+    def list_all_users(self, *args, **kargs):
+        return self.stub.ListAllUsers(User_pb2.Empty())
+
+
 def start(port=8000):
     completer = WordCompleter([
         "create_user",
@@ -14,8 +36,7 @@ def start(port=8000):
         "list_all_users"
     ])
     session = PromptSession(completer=completer)
-    channel = grpc.insecure_channel(f"localhost:{port}")
-    stub = User_pb2_grpc.UserServiceStub(channel)
+    client = UserClient(port)
 
     def parse(text):
         text = text.strip()
@@ -38,26 +59,8 @@ def start(port=8000):
         message = User_pb2.User()
         message.name = name
 
-        if cmd == "create_user" and name:
-            response = stub.CreateUser(message)
-            print(response)
-
-        if cmd == "read_user" and name:
-            response = stub.ReadUser(message)
-            print(response)
-
-        if cmd == "update_user" and name:
-            response = stub.UpdateUser(message)
-            print(response)
-
-        if cmd == "delete_user" and name:
-            response = stub.DeleteUser(message)
-            print(response)
-
-        if cmd == "list_all_users":
-            message = User_pb2.Empty()
-            response = stub.ListAllUsers(message)
-            for user in response.items:
-                print(user)
+        client_method = getattr(client, cmd)
+        res = client_method(message)
+        print(res)
 
     print("Exiting!")
