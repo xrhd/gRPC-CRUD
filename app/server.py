@@ -2,36 +2,26 @@ from interfaces import User_pb2, User_pb2_grpc
 import grpc
 from concurrent.futures import ThreadPoolExecutor
 import time
+from .server_db import FakeDB
 
 
 class UserServer(User_pb2_grpc.UserServiceServicer):
-    users = User_pb2.Users()
-    names = dict()
+    db = FakeDB()
 
     def CreateUser(self, request, context):
-        if request.name not in self.names.keys():
-            self.users.items.append(request)
-            self.names[request.name] = len(self.users.items)
-        return request
+        return self.db.CreateUser(request)
 
     def ReadUser(self, request, context):
-        if idx := self.names.get(request.name):
-            return self.users.items[idx-1]
-        return User_pb2.User()
+        return self.db.ReadUser(request)
 
     def UpdateUser(self, request, context):
-        if idx := self.names.get(request.name):
-            return self.users.items[idx-1]
-        return User_pb2.User()
+        return self.db.UpdateUser(request)
 
     def DeleteUser(self, request, context):
-        if idx := self.names.get(request.name):
-            self.names.pop(request.name)
-            return self.users.items.pop(idx-1)
-        return User_pb2.User()
+        return self.db.DeleteUser(request)
 
     def ListAllUsers(self, request, context):
-        return self.users
+        return self.db.ListAllUsers()
 
 
 def serve(port=8000):
