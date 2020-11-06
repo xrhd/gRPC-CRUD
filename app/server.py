@@ -5,10 +5,33 @@ import time
 
 
 class UserServer(User_pb2_grpc.UserServiceServicer):
+    users = User_pb2.Users()
+    names = dict()
+
+    def CreateUser(self, request, context):
+        if request.name not in self.names.keys():
+            self.users.items.append(request)
+            self.names[request.name] = len(self.users.items)
+        return request
+
+    def ReadUser(self, request, context):
+        if idx := self.names.get(request.name):
+            return self.users.items[idx-1]
+        return User_pb2.User()
+
+    def UpdateUser(self, request, context):
+        if idx := self.names.get(request.name):
+            return self.users.items[idx-1]
+        return User_pb2.User()
+
+    def DeleteUser(self, request, context):
+        if idx := self.names.get(request.name):
+            self.names.pop(request.name)
+            return self.users.items.pop(idx-1)
+        return User_pb2.User()
+
     def ListAllUsers(self, request, context):
-        response = User_pb2.User()
-        response.name = "User 1"
-        return response
+        return self.users
 
 
 def serve(port=8000):

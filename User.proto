@@ -1,11 +1,13 @@
 syntax = "proto3";
 
-message User { string name = 1; }
 message Empty {}
+
+message User { string name = 1; }
+message Users { repeated User items = 1; }
 service UserService {
   rpc CreateUser(User) returns (User) {};
   rpc ReadUser(User) returns (User) {};
   rpc UpdateUser(User) returns (User) {};
   rpc DeleteUser(User) returns (User) {};
-  rpc ListAllUsers(Empty) returns (User) {};
+  rpc ListAllUsers(Empty) returns (Users) {};
 }
